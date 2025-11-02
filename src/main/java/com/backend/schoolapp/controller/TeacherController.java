@@ -49,10 +49,13 @@ public class TeacherController {
     @PutMapping("/{id}")
     public ResponseEntity<Teacher> update(@PathVariable Long id, @RequestBody Teacher teacher) {
         try {
+            System.out.println("Actualizando teacher ID: " + id);
+            System.out.println("Datos recibidos: " + teacher.toString());
             teacher.setId(id);
             Teacher updatedTeacher = service.save(teacher);
             return ResponseEntity.ok(updatedTeacher);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
@@ -63,6 +66,17 @@ public class TeacherController {
             service.delete(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    @GetMapping("/search")
+    public ResponseEntity<List<Teacher>> searchTeachers(@RequestParam String query) {
+        try {
+            List<Teacher> teachers = service.searchTeachers(query);
+            return ResponseEntity.ok(teachers);
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

@@ -1,6 +1,7 @@
 package com.backend.schoolapp.controller;
 
 import com.backend.schoolapp.model.Subject;
+import com.backend.schoolapp.model.SubjectDTO;
 import com.backend.schoolapp.service.SubjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,22 +38,23 @@ public class SubjectController {
     }
 
     @PostMapping
-    public ResponseEntity<Subject> create(@RequestBody Subject subject) {
+    public ResponseEntity<Subject> create(@RequestBody SubjectDTO subjectDTO) {
         try {
-            Subject savedSubject = service.save(subject);
+            Subject savedSubject = service.createSubject(subjectDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedSubject);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Subject> update(@PathVariable Long id, @RequestBody Subject subject) {
+    public ResponseEntity<Subject> update(@PathVariable Long id, @RequestBody SubjectDTO subjectDTO) {
         try {
-            subject.setId(id);
-            Subject updatedSubject = service.save(subject);
+            Subject updatedSubject = service.updateSubject(id, subjectDTO);
             return ResponseEntity.ok(updatedSubject);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }

@@ -2,6 +2,7 @@ package com.backend.schoolapp.controller;
 
 import com.backend.schoolapp.model.Student;
 import com.backend.schoolapp.model.StudentDetailDTO;
+import com.backend.schoolapp.model.StudentDTO;
 import com.backend.schoolapp.model.ErrorResponse;
 import com.backend.schoolapp.service.StudentService;
 import jakarta.validation.Valid;
@@ -40,27 +41,24 @@ public class StudentController {
     }
 
     @PostMapping
-    public ResponseEntity<Student> create(@Valid @RequestBody Student student) {
+    public ResponseEntity<Student> create(@RequestBody StudentDTO studentDTO) {
         try {
-            Student savedStudent = service.save(student);
+            Student savedStudent = service.createStudent(studentDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedStudent);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Student> update(@PathVariable Long id, @Valid @RequestBody Student student) {
+    public ResponseEntity<Student> update(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
         try {
-            System.out.println("Actualizando estudiante ID: " + id);
-            System.out.println("Datos recibidos: " + student.toString());
-            student.setId(id);
-            Student updatedStudent = service.save(student);
+            Student updatedStudent = service.updateStudent(id, studentDTO);
             return ResponseEntity.ok(updatedStudent);
         } catch (Exception e) {
             e.printStackTrace();
-            ErrorResponse error = new ErrorResponse(e.getMessage(), "Error al actualizar estudiante");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
