@@ -1,6 +1,7 @@
 package com.backend.schoolapp.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class Teacher {
     private String firstName;
     private String lastName;
     private String email;
+    private String department;
 
     @JsonIgnore
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
