@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/teachers/**").permitAll()
                         .requestMatchers("/api/exams/**").permitAll()
                         .requestMatchers("/api/careers/**").permitAll()
+                        .requestMatchers("/api/departments/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

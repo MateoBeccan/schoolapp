@@ -14,6 +14,8 @@
             type="text" 
             class="form-control" 
             :class="{ 'is-invalid': errors.username }"
+            placeholder="Ingresa tu usuario"
+            autocomplete="username"
             required 
           />
           <div v-if="errors.username" class="invalid-feedback">
@@ -23,14 +25,24 @@
 
         <div class="mb-3">
           <label class="form-label">Contraseña</label>
-          <input 
-            v-model="loginForm.password" 
-            type="password" 
-            class="form-control"
-            :class="{ 'is-invalid': errors.password }"
-            required 
-          />
-          <div v-if="errors.password" class="invalid-feedback">
+          <div class="input-group">
+            <input 
+              v-model="loginForm.password" 
+              :type="showPassword ? 'text' : 'password'" 
+              class="form-control"
+              :class="{ 'is-invalid': errors.password }"
+              placeholder="Ingresa tu contraseña"
+              required 
+            />
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary"
+              @click="showPassword = !showPassword"
+            >
+              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <div v-if="errors.password" class="invalid-feedback d-block">
             {{ errors.password }}
           </div>
         </div>
@@ -59,55 +71,53 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { authService } from '../auth.js'
 
 const router = useRouter()
 
 const loginForm = ref({
-  username: '',
+  username: 'admin',
   password: ''
 })
 
 const errors = ref({})
 const errorMessage = ref('')
 const loading = ref(false)
+const showPassword = ref(false)
 
-const apiBase = 'http://localhost:8080/api'
+// Validación simple
+const validateForm = () => {
+  return loginForm.value.username.trim() && loginForm.value.password.trim()
+}
 
 const handleLogin = async () => {
+  if (!validateForm()) return
+  
   loading.value = true
-  errors.value = {}
   errorMessage.value = ''
 
   try {
-    const response = await axios.post(`${apiBase}/auth/login`, loginForm.value)
+    await authService.login(loginForm.value)
     
-    // Guardar token y datos del usuario
-    localStorage.setItem('token', response.data.token)
-    localStorage.setItem('user', JSON.stringify({
-      username: response.data.username,
-      email: response.data.email,
-      role: response.data.role
-    }))
-
-    // Configurar axios para incluir el token en futuras peticiones
-    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
-
-    // Redirigir al dashboard
+    // Redirigir inmediatamente
     router.push('/dashboard')
     
   } catch (error) {
-    if (error.response?.status === 400) {
-      errorMessage.value = 'Credenciales incorrectas'
-    } else {
-      errorMessage.value = 'Error de conexión. Intenta nuevamente.'
-    }
+    errorMessage.value = error.message
+    loginForm.value.password = ''
   } finally {
     loading.value = false
   }
 }
+
+// Verificar si ya está autenticado
+onMounted(() => {
+  if (authService.isAuthenticated()) {
+    router.push('/dashboard')
+  }
+})
 </script>
 
 <style scoped>

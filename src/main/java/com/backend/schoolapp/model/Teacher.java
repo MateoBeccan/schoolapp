@@ -27,7 +27,10 @@ public class Teacher {
     private String firstName;
     private String lastName;
     private String email;
-    private String department;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     @JsonIgnore
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)

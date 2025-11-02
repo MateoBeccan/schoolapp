@@ -16,32 +16,73 @@ axios.interceptors.request.use(
   }
 )
 
-// Interceptor simplificado para manejar errores
+// Interceptor para manejar errores y logout automático
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error)
+    if (error.response?.status === 401) {
+      // Token inválido o expirado
+      authService.logout()
+      window.location.href = '/login'
+    }
     return Promise.reject(error)
   }
 )
 
-export const authService = {
-  // Login
+const authService = {
+  // Login optimizado
   async login(credentials) {
-    const response = await axios.post(`${API_BASE}/auth/login`, credentials)
-    return response.data
+    try {
+      const response = await axios.post(`${API_BASE}/auth/login`, credentials)
+      const { token, username, email, role } = response.data
+      
+      // Guardar datos de sesión
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify({ username, email, role }))
+      localStorage.setItem('loginTime', Date.now().toString())
+      
+      // Configurar header de autorización
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error de autenticación')
+    }
   },
 
-  // Logout
+  // Logout optimizado
   logout() {
+    // Limpiar almacenamiento local
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    localStorage.removeItem('loginTime')
+    
+    // Limpiar headers de axios
     delete axios.defaults.headers.common['Authorization']
+    
+    // Limpiar cualquier timer de sesión
+    if (this.sessionTimer) {
+      clearTimeout(this.sessionTimer)
+    }
   },
 
-  // Verificar si está autenticado
+  // Verificar autenticación con validación de tiempo
   isAuthenticated() {
-    return !!localStorage.getItem('token')
+    const token = localStorage.getItem('token')
+    const loginTime = localStorage.getItem('loginTime')
+    
+    if (!token || !loginTime) return false
+    
+    // Verificar si la sesión ha expirado (24 horas)
+    const sessionDuration = 24 * 60 * 60 * 1000 // 24 horas
+    const isExpired = Date.now() - parseInt(loginTime) > sessionDuration
+    
+    if (isExpired) {
+      this.logout()
+      return false
+    }
+    
+    return true
   },
 
   // Obtener usuario actual
@@ -50,13 +91,20 @@ export const authService = {
     return user ? JSON.parse(user) : null
   },
 
-  // Validar token
-  async validateToken() {
-    try {
-      await axios.get(`${API_BASE}/auth/validate`)
+  // Inicializar sesión automáticamente
+  initializeSession() {
+    const token = localStorage.getItem('token')
+    if (token && this.isAuthenticated()) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       return true
-    } catch {
-      return false
+    }
+    return false
+  },
+  
+  // Renovar tiempo de sesión
+  refreshSession() {
+    if (this.isAuthenticated()) {
+      localStorage.setItem('loginTime', Date.now().toString())
     }
   },
 
@@ -64,7 +112,10 @@ export const authService = {
   async initializeAdmin() {
     const response = await axios.post(`${API_BASE}/init`)
     return response.data
-  }
+  },
+  
+  sessionTimer: null
 }
 
+export { authService }
 export default authService

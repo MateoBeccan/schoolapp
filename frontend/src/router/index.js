@@ -77,15 +77,25 @@ const router = createRouter({
   routes
 })
 
-// Guard de autenticación
+// Guard de autenticación optimizado
 router.beforeEach((to, from, next) => {
   const isAuthenticated = authService.isAuthenticated()
   
+  // Inicializar sesión si hay token válido
+  if (isAuthenticated) {
+    authService.initializeSession()
+  }
+  
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
+    // Redirigir a login con mensaje
+    next({ path: '/login', query: { redirect: to.fullPath } })
   } else if (to.meta.requiresGuest && isAuthenticated) {
     next('/dashboard')
   } else {
+    // Renovar sesión en navegación
+    if (isAuthenticated) {
+      authService.refreshSession()
+    }
     next()
   }
 })

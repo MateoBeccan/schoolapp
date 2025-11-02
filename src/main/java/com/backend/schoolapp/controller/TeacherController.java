@@ -1,6 +1,7 @@
 package com.backend.schoolapp.controller;
 
 import com.backend.schoolapp.model.Teacher;
+import com.backend.schoolapp.model.TeacherDTO;
 import com.backend.schoolapp.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,22 +38,20 @@ public class TeacherController {
     }
 
     @PostMapping
-    public ResponseEntity<Teacher> create(@RequestBody Teacher teacher) {
+    public ResponseEntity<Teacher> create(@RequestBody TeacherDTO teacherDTO) {
         try {
-            Teacher savedTeacher = service.save(teacher);
+            Teacher savedTeacher = service.createTeacher(teacherDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedTeacher);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Teacher> update(@PathVariable Long id, @RequestBody Teacher teacher) {
+    public ResponseEntity<Teacher> update(@PathVariable Long id, @RequestBody TeacherDTO teacherDTO) {
         try {
-            System.out.println("Actualizando teacher ID: " + id);
-            System.out.println("Datos recibidos: " + teacher.toString());
-            teacher.setId(id);
-            Teacher updatedTeacher = service.save(teacher);
+            Teacher updatedTeacher = service.updateTeacher(id, teacherDTO);
             return ResponseEntity.ok(updatedTeacher);
         } catch (Exception e) {
             e.printStackTrace();

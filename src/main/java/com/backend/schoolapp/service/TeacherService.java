@@ -1,7 +1,10 @@
 package com.backend.schoolapp.service;
 
 import com.backend.schoolapp.model.Teacher;
+import com.backend.schoolapp.model.TeacherDTO;
+import com.backend.schoolapp.model.Department;
 import com.backend.schoolapp.repository.TeacherRepository;
+import com.backend.schoolapp.repository.DepartmentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,9 +12,11 @@ import java.util.List;
 @Service
 public class TeacherService {
     private final TeacherRepository repo;
+    private final DepartmentRepository departmentRepository;
 
-    public TeacherService(TeacherRepository repo) {
+    public TeacherService(TeacherRepository repo, DepartmentRepository departmentRepository) {
         this.repo = repo;
+        this.departmentRepository = departmentRepository;
     }
 
     public List<Teacher> getAll() { return repo.findAll(); }
@@ -49,6 +54,33 @@ public class TeacherService {
     
     public List<Teacher> searchTeachers(String query) {
         return repo.searchByEnrollmentOrName(query);
+    }
+    
+    public Teacher createTeacher(TeacherDTO dto) {
+        Teacher teacher = convertDTOToTeacher(dto);
+        return save(teacher);
+    }
+    
+    public Teacher updateTeacher(Long id, TeacherDTO dto) {
+        Teacher teacher = convertDTOToTeacher(dto);
+        teacher.setId(id);
+        return save(teacher);
+    }
+    
+    private Teacher convertDTOToTeacher(TeacherDTO dto) {
+        Teacher teacher = new Teacher();
+        teacher.setId(dto.getId());
+        teacher.setEnrollment(dto.getEnrollment());
+        teacher.setFirstName(dto.getFirstName());
+        teacher.setLastName(dto.getLastName());
+        teacher.setEmail(dto.getEmail());
+        
+        if (dto.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(dto.getDepartmentId()).orElse(null);
+            teacher.setDepartment(department);
+        }
+        
+        return teacher;
     }
     public void delete(Long id) { repo.deleteById(id); }
 }
